@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Отметка присутствия</title>
+</head>
+<body>
+<h1>Отметка присутствия</h1>
+
+<input id="fio" placeholder="Ваше ФИО"><br><br>
+<button id="btn">Отметиться</button>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+const tg = window.Telegram.WebApp;
+
+document.getElementById('btn').onclick = async () => {
+  const initData = tg.initData; // строка данных от Telegram
+  const name = document.getElementById('fio').value;
+
+  const resp = await fetch('https://ВАШ-ДОМЕН/attendance', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ initData, name })
+  });
+
+  const data = await resp.json();
+  alert(data.ok ? 'Вы успешно отметились!' : 'Ошибка: ' + data.error);
+};
+</script>
+</body>
+</html>
