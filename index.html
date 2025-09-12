@@ -1,33 +1,88 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Отметка присутствия</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Расписание — ESU</title>
+<link rel="stylesheet" href="/style.css">
 </head>
 <body>
-<h1>Отметка присутствия</h1>
+  <header class="topbar">
+    <div class="wrap">
+      <h1>Расписание</h1>
+      <div class="actions">
+        <a id="downloadBtn" class="btn outline" href="#" target="_blank" rel="noreferrer">Скачать XLSX</a>
+        <button id="refreshBtn" class="btn">Обновить</button>
+      </div>
+    </div>
+  </header>
 
-<input id="fio" placeholder="Ваше ФИО"><br><br>
-<button id="btn">Отметиться</button>
+  <main class="wrap content">
+    <div class="hint">Источник: внешний файл XLSX. Если таблица не загрузилась — попробуй кнопку «Обновить» или сообщи старосте.</div>
 
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <div class="controls">
+      <label>Ссылка на расписание:
+        <input id="urlInput" value="https://esil.edu.kz/wp-content/uploads/2025/09/2к4г-1к3г-1к2г-2я-неделя-2.xlsx" />
+      </label>
+      <div class="small">Можно вставить любую другую ссылку на .xlsx</div>
+    </div>
+
+    <div id="tableWrap" class="table-wrap">Загрузка...</div>
+  </main>
+
+  <footer class="wrap footer">
+    <small>ESU — просмотр расписания. Если нужна автоматическая интеграция в Telegram — можно сделать кнопку в боте, которая откроет эту страницу как Web App.</small>
+  </footer>
+
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <script>
-const tg = window.Telegram.WebApp;
+const tableWrap = document.getElementById('tableWrap');
+const urlInput = document.getElementById('urlInput');
+const refreshBtn = document.getElementById('refreshBtn');
+const downloadBtn = document.getElementById('downloadBtn');
 
-document.getElementById('btn').onclick = async () => {
-  const initData = tg.initData; // строка данных от Telegram
-  const name = document.getElementById('fio').value;
+async function loadXlsx(url) {
+  tableWrap.innerHTML = 'Загрузка...';
+  try {
+    // Попытка получить напрямую (если CORS разрешён)
+    const resp = await fetch(url);
+    if(!resp.ok) throw new Error('Ошибка при загрузке: ' + resp.status);
+    const ab = await resp.arrayBuffer();
+    const workbook = XLSX.read(new Uint8Array(ab), { type: 'array' });
 
-  const resp = await fetch('https://ВАШ-ДОМЕН/attendance', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ initData, name })
-  });
+    // Берём первую страницу
+    const firstSheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[firstSheetName];
+    const html = XLSX.utils.sheet_to_html(worksheet, { id: "xlsx-table" });
+    tableWrap.innerHTML = html;
 
-  const data = await resp.json();
-  alert(data.ok ? 'Вы успешно отметились!' : 'Ошибка: ' + data.error);
-};
+    // Обновить ссылку на скачивание
+    downloadBtn.href = url;
+  } catch (err) {
+    console.error(err);
+    tableWrap.innerHTML = `<div class="error">Не удалось загрузить файл напрямую: ${err.message}.<br>
+      Если проблема связана с CORS, включите прокси на сервере (см. инструкцию ниже) или попробуйте скачать файл вручную.</div>`;
+    downloadBtn.href = url; // пусть хотя бы скачивать можно
+  }
+}
+
+refreshBtn.onclick = ()=> loadXlsx(urlInput.value.trim());
+
+/* Авозагрузка по умолчанию */
+loadXlsx(urlInput.value.trim());
+
+/* Telegram WebApp_hint: если открыт в Telegram, можно показать имя пользователя */
+try {
+  const tg = window.Telegram?.WebApp;
+  if(tg && tg.initDataUnsafe?.user){
+    const u = tg.initDataUnsafe.user;
+    // добавим приветствие
+    const el = document.createElement('div');
+    el.className = 'small note';
+    el.textContent = `Вы вошли как ${u.first_name || ''} ${u.last_name || ''}`.trim();
+    document.querySelector('.content').prepend(el);
+  }
+} catch(e){ /* ignore */ }
 </script>
 </body>
 </html>
