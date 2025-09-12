@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Отметка посещения — ESU</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main class="card">
+    <img src="" alt="" class="logo" style="display:none;">
+    <h1>Отметить посещение</h1>
+    <p class="small">Откройте это через Telegram (Web App) для авторизации. Или используйте форму вручную.</p>
+
+    <label>ФИО
+      <input id="fio" placeholder="Иванов Иван Иванович" />
+    </label>
+
+    <div class="row">
+      <button id="check" class="btn">Проверить локацию</button>
+      <button id="mark" class="btn primary" disabled>Отметиться</button>
+    </div>
+
+    <p id="info" class="info">Статус: ожидание</p>
+    <div id="log"></div>
+  </main>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+/* ========== НАСТРОЙКИ: поставь координаты своего университета ========== */
+const uniLat = 51.1283;     // Заменить на реальные
+const uniLng = 71.4306;     // Заменить на реальные
+const radiusMeters = 200;   // Допустимый радиус (м)
+/* ==================================================================== */
+
+const info = document.getElementById('info');
+const markBtn = document.getElementById('mark');
+const checkBtn = document.getElementById('check');
+const fioInput = document.getElementById('fio');
+const log = document.getElementById('log');
+
+function toRad(d){ return d * Math.PI/180; }
+function distanceMeters(lat1, lon1, lat2, lon2){
+  const R = 6371000;
+  const dLat = toRad(lat2-lat1);
+  const dLon = toRad(lon2-lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+let lastPos = null;
+let inZone = false;
+const tg = window.Telegram?.WebApp || null;
+
+async function checkLocation(){
+  info.textContent = 'Статус: получение координат...';
+  if(!navigator.geolocation){
+    info.textContent = 'Геолокация не поддерживается';
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(pos=>{
+    lastPos = pos.coords;
+    const d = Math.round(distanceMeters(pos.coords.latitude, pos.coords.longitude, uniLat, uniLng));
+    if(d <= radiusMeters){
+      inZone = true;
+      info.textContent = `В зоне (${d} м). Можно отметиться.`;
+      markBtn.disabled = false;
+    } else {
+      inZone = false;
+      info.textContent = `Вне зоны (${d} м). Подойдите ближе.`;
+      markBtn.disabled = true;
+    }
+  }, err=>{
+    info.textContent = 'Ошибка получения геолокации — разрешите доступ.';
+  }, {enableHighAccuracy:true, timeout:10000});
+}
+
+checkBtn.onclick = checkLocation;
+
+markBtn.onclick = async ()=>{
+  markBtn.disabled = true;
+  info.textContent = 'Отправка отметки...';
+  const name = fioInput.value.trim() || '(ФИО не указано)';
+  const initData = (tg && tg.initData) ? tg.initData : null;
+
+  // prepare payload
+  const payload = {
+    initData,
+    name,
+    lat: lastPos ? lastPos.latitude : null,
+    lng: lastPos ? lastPos.longitude : null,
+    inZone
+  };
+
+  try{
+    const resp = await fetch('/attendance', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const j = await resp.json();
+    if(j.ok){
+      info.textContent = 'Готово — отметка принята';
+      log.innerHTML = `<div class="small">Отметил: ${name} — ${new Date().toLocaleString()}</div>`;
+      markBtn.disabled = true;
+    } else {
+      info.textContent = 'Ошибка: ' + (j.error || 'неизвестно');
+      markBtn.disabled = false;
+    }
+  } catch(e){
+    info.textContent = 'Сетевая ошибка при отправке';
+    markBtn.disabled = false;
+  }
+};
+
+// опционально: если открыт через Telegram — префилл ФИО
+if(window.Telegram?.WebApp?.initDataUnsafe?.user){
+  const u = window.Telegram.WebApp.initDataUnsafe.user;
+  fioInput.value = `${u.last_name || ''} ${u.first_name || ''}`.trim();
+}
+</script>
+</body>
+</html>
