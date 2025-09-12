@@ -2,7 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const bodyParser = require('body-parser');
 
-const BOT_TOKEN = process.env.8388147262:AAFHyfIR-y3bkGtYhK_IJjfSQMrgGhiRN98; // Токен вашего бота
+const BOT_TOKEN = process.env.BOT_TOKEN; // Токен бота берём из переменной окружения
 const app = express();
 app.use(bodyParser.json());
 
@@ -53,3 +53,4 @@ app.post('/attendance', (req, res) => {
 });
 
 app.listen(3000, () => console.log('Server started on http://localhost:3000'));
+
