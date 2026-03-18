@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Avtobys Clone</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://is1-ssl.mzstatic.com/image/thumb/Purple126/v4/44/22/3a/44223a31-6e3e-63f4-187e-976182187970/AppIcon-0-0-1x_U007emarketing-0-0-0-7-0-0-sRGB-0-0-0-GLES2_U002c0-512MB-85-220-0-0.png/512x512bb.jpg">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #F5F7FA; overflow-x: hidden; }
+        .active-tab { color: #1A6AFE !important; }
+        .qr-btn { box-shadow: 0 4px 15px rgba(26, 106, 254, 0.4); }
+        /* Скрываем скроллбар */
+        ::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="safe-area-inset-top">
+
+    <div id="app" class="max-w-md mx-auto min-h-screen pb-24">
+        
+        <div id="screen-home" class="p-4 pt-12">
+            <div class="bg-white rounded-2xl p-4 mb-4 flex justify-between items-center shadow-sm">
+                <span class="font-bold text-gray-800">Оформить льготный тариф</span>
+                <span class="text-3xl">📝</span>
+            </div>
+
+            <div class="bg-gradient-to-br from-blue-600 to-blue-400 rounded-3xl p-6 text-white mb-6 relative overflow-hidden">
+                <div class="text-sm opacity-80">Баланс</div>
+                <div class="flex justify-between items-center mt-1">
+                    <div class="text-4xl font-bold tracking-tight">0,00 ₸</div>
+                    <div class="bg-white/20 p-2 rounded-full backdrop-blur-md active:scale-90 transition-transform">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
+                    </div>
+                </div>
+                <div class="mt-6 text-sm font-medium client-number-display">Номер не привязан</div>
+                <div class="text-xs opacity-60">Стандарт</div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 mb-6">
+                <div class="bg-white p-4 rounded-2xl flex flex-col items-center shadow-sm active:bg-gray-50" onclick="openScanner()">
+                    <span class="text-blue-500 mb-1 text-2xl">🔳</span>
+                    <span class="text-xs font-semibold">QR</span>
+                </div>
+                <div class="bg-white p-4 rounded-2xl flex flex-col items-center shadow-sm opacity-50">
+                    <span class="text-blue-500 mb-1 text-2xl">🌐</span>
+                    <span class="text-xs font-semibold">Bluetooth</span>
+                </div>
+                <div class="bg-white p-4 rounded-2xl flex flex-col items-center shadow-sm active:scale-95 transition-transform cursor-pointer border-2 border-blue-100" onclick="loginTG()">
+                    <span class="text-blue-500 mb-1 text-2xl">📱</span>
+                    <span class="text-xs font-semibold">Войти (TG)</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="bg-white p-4 rounded-xl flex items-center space-x-3 shadow-sm">
+                    <span class="text-xl">📄</span> <span class="text-sm font-medium">Платежи</span>
+                </div>
+                <div class="bg-white p-4 rounded-xl flex items-center space-x-3 shadow-sm">
+                    <span class="text-xl">🎫</span> <span class="text-sm font-medium">Мои билеты</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-routes" class="hidden p-4 pt-12">
+            <h1 class="text-xl font-bold mb-4">Маршруты (Астана)</h1>
+            <input type="text" placeholder="Поиск маршрута..." class="w-full p-3 rounded-xl border-none shadow-sm mb-4 outline-none">
+            <div class="space-y-3">
+                <div class="bg-white p-4 rounded-xl flex items-center space-x-4 shadow-sm">
+                    <div class="bg-blue-600 text-white p-2 rounded-full">🚌</div>
+                    <div><div class="font-bold">Маршрут 1</div><div class="text-xs text-gray-400 text-ellipsis">Кирпичный - Газмашаппарат</div></div>
+                </div>
+                <div class="bg-white p-4 rounded-xl flex items-center space-x-4 shadow-sm">
+                    <div class="bg-blue-600 text-white p-2 rounded-full">🚌</div>
+                    <div><div class="font-bold">Маршрут 10</div><div class="text-xs text-gray-400">ЖК «Burabay» - Аэропорт</div></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-menu" class="hidden p-4 pt-12">
+            <h1 class="text-xl font-bold mb-6">Меню</h1>
+            <div class="bg-white rounded-2xl overflow-hidden shadow-sm">
+                <div class="p-4 border-b flex items-center space-x-4">
+                    <div class="bg-yellow-500 text-white p-2 rounded-full">⚙️</div>
+                    <span class="flex-1 font-medium">Настройки</span>
+                </div>
+                <div class="p-4 border-b flex items-center space-x-4">
+                    <div class="bg-yellow-500 text-white p-2 rounded-full">📍</div>
+                    <span class="flex-1 font-medium">Мой город</span>
+                    <span class="text-gray-400 text-sm">Астана</span>
+                </div>
+                <div class="p-4 flex items-center space-x-4">
+                    <div class="bg-yellow-500 text-white p-2 rounded-full">🌐</div>
+                    <span class="flex-1 font-medium">Язык</span>
+                    <span class="text-gray-400 text-sm">Русский</span>
+                </div>
+            </div>
+            <div class="mt-6 p-4 bg-slate-700 rounded-2xl text-white flex justify-between items-center">
+                <div><div class="font-bold">Поделиться с друзьями</div><div class="text-xs opacity-60">Отправить ссылку</div></div>
+                <span class="text-2xl">📤</span>
+            </div>
+        </div>
+
+        <div id="scanner-layer" class="hidden fixed inset-0 bg-black z-50 flex flex-col text-white">
+            <div class="p-6 flex justify-between items-center pt-12">
+                <span>⚡️</span>
+                <span onclick="closeScanner()" class="text-2xl">✕</span>
+            </div>
+            <div class="flex-1 flex items-center justify-center">
+                <div class="w-64 h-64 border-4 border-blue-500 rounded-3xl relative">
+                    <div class="absolute inset-0 bg-blue-500/10 animate-pulse"></div>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="bg-slate-800/90 backdrop-blur-md p-6 rounded-3xl">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-bold">Кошелек</span>
+                        <span class="font-bold">0,00 ₸</span>
+                    </div>
+                    <div class="text-sm opacity-70">
+                        <span class="client-number-display">Номер не привязан</span> • Стандарт
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around items-center h-20 pb-4 shadow-2xl z-40">
+            <div onclick="showScreen('home')" class="nav-item active-tab flex flex-col items-center">
+                <span class="text-xl">🏠</span><span class="text-[10px]">Avtobys</span>
+            </div>
+            <div onclick="showScreen('routes')" class="nav-item flex flex-col items-center text-gray-400">
+                <span class="text-xl">🛤</span><span class="text-[10px]">Маршруты</span>
+            </div>
+            <div class="relative -top-4">
+                <div onclick="openScanner()" class="qr-btn bg-blue-600 p-4 rounded-full text-white active:scale-90 transition-transform">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m-3 3h2m3-3h2m-5 4v1m4-1v1m-7 3h10M6 7a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1H7a1 1 0 01-1-1V7zm10 0a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1V7zM6 17a1 1 0 011-1h3a1 1 0 011 1v3a1 1 0 01-1 1H7a1 1 0 01-1-1v-3z"></path></svg>
+                </div>
+            </div>
+            <div class="nav-item flex flex-col items-center text-gray-400">
+                <span class="text-xl">🔔</span><span class="text-[10px]">Уведомления</span>
+            </div>
+            <div onclick="showScreen('menu')" class="nav-item flex flex-col items-center text-gray-400">
+                <span class="text-xl">🍔</span><span class="text-[10px]">Меню</span>
+            </div>
+        </nav>
+    </div>
+
+    <script>
+        // Переменная номера
+        let clientNumber = "Номер не привязан";
+
+        function loginTG() {
+            // Имитация авторизации
+            clientNumber = "+7 (747) 941-64-98";
+            document.querySelectorAll('.client-number-display').forEach(el => {
+                el.innerText = clientNumber;
+            });
+            alert("Номер получен через Telegram: " + clientNumber);
+        }
+
+        function showScreen(screenId) {
+            // Скрыть все экраны
+            document.getElementById('screen-home').classList.add('hidden');
+            document.getElementById('screen-routes').classList.add('hidden');
+            document.getElementById('screen-menu').classList.add('hidden');
+            
+            // Показать выбранный
+            document.getElementById('screen-' + screenId).classList.remove('hidden');
+
+            // Подсветка иконок
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active-tab'));
+            event.currentTarget.classList.add('active-tab');
+        }
+
+        function openScanner() {
+            document.getElementById('scanner-layer').classList.remove('hidden');
+        }
+
+        function closeScanner() {
+            document.getElementById('scanner-layer').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
